@@ -25,7 +25,7 @@ public class Program
 
         app.UseHttpsRedirection();
 
-// adds endpoints to requested pipeline
+        // adds endpoints to requested pipeline
         app.MapControllers();
 
         app.Run();

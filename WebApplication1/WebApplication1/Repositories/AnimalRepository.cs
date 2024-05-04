@@ -1,5 +1,4 @@
 using System.Data.SqlClient;
-using Microsoft.AspNetCore.Http.HttpResults;
 using WebApplication1.Model;
 
 namespace WebApplication1.Repositories;
@@ -14,16 +13,27 @@ public class AnimalRepository : IAnimalRepository
         _configuration = configuration;
     }
 
-    public IEnumerable<Animal> GetAnimals()
+    public IEnumerable<Animal> GetAnimals(string? orderBy)
     {
+        
+        if (orderBy == null)
+        {
+            orderBy = "name";
+        }
+        
+        HashSet<string?> orderByOptions = new HashSet<string?>(){ "name", "description", "category", "area"};
+        if (!orderByOptions.Contains(orderBy))
+        {
+            throw new Exception();
+        }
+
+        string query = $"SELECT * FROM ANIMAL ORDER BY {orderBy}";
+        
         using var con = new SqlConnection(_configuration["ConnectionStrings:DefaultConnection"]);
         con.Open();
-
-        using var cmd = new SqlCommand();
-        cmd.Connection = con;
-        cmd.CommandText = "SELECT * FROM ANIMAL";
+        using var cmd = new SqlCommand(query, con);
         
-        var dr = cmd.ExecuteReader();
+        var dr = cmd.ExecuteReader(); ///////////////// to jest kursor - w trybie dynamicznym wczytuje rekord po rekordzie
         
         var animals = new List<Animal>();
         while (dr.Read())
@@ -41,8 +51,53 @@ public class AnimalRepository : IAnimalRepository
         return animals;
     }
 
-    public IEnumerable<Animal> FetchAnimals()
+    public int CreateAnimal(Animal newAnimal)
     {
-        throw new NotImplementedException();
+        using var con = new SqlConnection(_configuration["ConnectionStrings:DefaultConnection"]);
+        con.Open();
+        
+        using var cmd = new SqlCommand();
+        cmd.Connection = con;
+        cmd.CommandText = "INSERT INTO Animal(Name, Description, Category, Area) VALUES(@Name, @Description, @Category, @Area)";
+        cmd.Parameters.AddWithValue("@IdAnimal", newAnimal.IdAnimal);
+        cmd.Parameters.AddWithValue("@Name", newAnimal.Name);
+        cmd.Parameters.AddWithValue("@Description", newAnimal.Description);
+        cmd.Parameters.AddWithValue("@Category", newAnimal.Category);
+        cmd.Parameters.AddWithValue("@Area", newAnimal.Area);
+        
+        var affectedCount = cmd.ExecuteNonQuery();
+        return affectedCount;
+    }
+
+    public int UpdateAnimal(Animal animal)
+    {
+        using var con = new SqlConnection(_configuration["ConnectionStrings:DefaultConnection"]);
+        con.Open();
+        
+        using var cmd = new SqlCommand();
+        cmd.Connection = con;
+        cmd.CommandText = "UPDATE Animal SET Name=@Name, Description=@Description, Category=@Category, Area=@Area WHERE IdAnimal = @IdAnimal";
+        cmd.Parameters.AddWithValue("@IdAnimal", animal.IdAnimal);
+        cmd.Parameters.AddWithValue("@Name", animal.Name);
+        cmd.Parameters.AddWithValue("@Description", animal.Description);
+        cmd.Parameters.AddWithValue("@Category", animal.Category);
+        cmd.Parameters.AddWithValue("@Area", animal.Area);
+        
+        var affectedCount = cmd.ExecuteNonQuery();
+        return affectedCount;
+    }
+
+    public int DeleteAnimal(int idAnimal)
+    {
+        using var con = new SqlConnection(_configuration["ConnectionStrings:DefaultConnection"]);
+        con.Open();
+        
+        using var cmd = new SqlCommand();
+        cmd.Connection = con;
+        cmd.CommandText = "DELETE FROM Animal WHERE IdAnimal = @IdAnimal";  ////////////////////// chroni przed SQL injection
+        cmd.Parameters.AddWithValue("@idAnimal", idAnimal);
+        
+        var affectedCount = cmd.ExecuteNonQuery();
+        return affectedCount;
     }
 }

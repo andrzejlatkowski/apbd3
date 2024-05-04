@@ -12,16 +12,23 @@ public class AnimalService : IAnimalService
         _animalRepository = animalRepository;
     }
 
-    public IEnumerable<Animal> GetAnimals()
+    public IEnumerable<Animal> GetAnimals(string? orderBy)
     {
-        // pobieramy cos z bazy
-        // cos robumy z danymi
-        return _animalRepository.GetAnimals();
+        return _animalRepository.GetAnimals(orderBy);
          
     }
-
     public int CreateAnimal(Animal newAnimal)
     {
-        throw new NotImplementedException();
+        return _animalRepository.CreateAnimal(newAnimal);
+    }
+
+    public int UpdateAnimal(Animal animal)
+    {
+        return _animalRepository.UpdateAnimal(animal);
+    }
+
+    public int DeleteAnimal(int idAnimal)
+    {
+        return _animalRepository.DeleteAnimal(idAnimal);
     }
 }
